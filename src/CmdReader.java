@@ -28,8 +28,9 @@ public class CmdReader {
             line = reader.readLine();
             try {
                 int value = engDigitParser.parse(line);
-                repository.data.add(value);
-                out.println(value);
+                repository.add(value);
+                out.println("Введено число " + value);
+                repository.print();
 
             } catch (InvalidEngNumberException|NullPointerException e) {
                 out.println("Неверное число: " + line);
