@@ -17,7 +17,7 @@ public class App {
             }
         }).start();
 
-        new Thread(() -> {
+        Thread modifier = new Thread(() -> {
             try {
                 while (true) {
                     Thread.sleep(5000);
@@ -26,7 +26,9 @@ public class App {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }).start();
+        });
+        modifier.setDaemon(true);
+        modifier.start();
 
 
     }

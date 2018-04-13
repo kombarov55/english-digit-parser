@@ -22,20 +22,23 @@ public class CmdReader {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         String line = null;
 
-        out.println("Здравствуйте! Вводите числа на английском");
+        out.println("Здравствуйте! Вводите числа на английском. Для выхода введите 'exit'. Чтобы посмотреть состояние памяти введите ls");
 
-        do {
+        while (true) {
             line = reader.readLine();
+            if (line == null) continue;
+            if (line.equals("exit")) break;
+            if (line.equals("ls")) {
+                repository.print();
+                continue;
+            }
             try {
                 int value = engDigitParser.parse(line);
                 repository.add(value);
-                out.println("Введено число " + value);
-                repository.print();
-
+                out.println(value);
             } catch (InvalidEngNumberException|NullPointerException e) {
                 out.println("Неверное число: " + line);
             }
-
-        } while (!line.equals("exit"));
+        }
     }
 }
