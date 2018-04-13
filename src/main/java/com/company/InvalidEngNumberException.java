@@ -1,3 +1,5 @@
+package com.company;
+
 public class InvalidEngNumberException extends RuntimeException {
 
     public InvalidEngNumberException(String msg) {

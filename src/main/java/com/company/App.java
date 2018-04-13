@@ -1,3 +1,4 @@
+package com.company;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
