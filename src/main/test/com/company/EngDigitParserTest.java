@@ -12,11 +12,13 @@ public class EngDigitParserTest {
 
     @Test()
     public void parse() throws Exception {
-        assertThat(parser.parse("one hundred twenty one"), is(equalTo(121)));
-        assertThat(parser.parse("one thousand"), is(equalTo(1000)));
-        assertThat(parser.parse("three"), is(equalTo(3)));
-        assertThat(parser.parse("nine thousand nine hundred ninety nine"), is(equalTo(9999)));
-        assertThat(parser.parse("nineteen"), is(equalTo(19)));
+        assertThat(parser.parse("one"), is(equalTo(1)));
+        assertThat(parser.parse("twenty"), is(equalTo(20)));
+        assertThat(parser.parse("fifty six"), is(equalTo(56)));
+        assertThat(parser.parse("one hundred"), is(equalTo(100)));
+        assertThat(parser.parse("two hundred fifteen"), is(equalTo(215)));
+        assertThat(parser.parse("nine thousand nine hundred ninety four"), is(equalTo(9994)));
+
     }
 
     @Test(expected = InvalidEngNumberException.class)
@@ -35,8 +37,18 @@ public class EngDigitParserTest {
     }
 
     @Test(expected = InvalidEngNumberException.class)
-    public void fails4() throws Exception {
-        parser.parse("one hundred sixteen");
+    public void fails6() throws Exception {
+        parser.parse("one one one one one");
+    }
+
+    @Test(expected = InvalidEngNumberException.class)
+    public void fails7() throws Exception {
+        parser.parse("hundred");
+    }
+
+    @Test(expected = InvalidEngNumberException.class)
+    public void fails8() throws Exception {
+        parser.parse("thousand five");
     }
 
 }

@@ -20,94 +20,125 @@ import java.util.Map;
  *
  * 1. Разделить по пробелам
  * 2. Развернуть
- * 3. Число?
- *    - число: sum += num
- *    - нет:
- *      - Суффикс ty?
- *        - Есть: sum += num * 10
- *        - Нет:
- *          - Есть в [hundred, thousand]?
- *            - Есть: модификатор к следующему числу = 100 | 1000
- *            - Нет: exception
+ * 3. Число < 9? (sum += num; если есть multiplier, то sum += num * multiplier) + далее десятокмультипликатор
+ *    Число [9, 19]? вставить + далее нельзя использовать сотни
+ *    Десяток? sum += num * 10 + далее число [1, 9] + далее мультипликатор
+ *    Мультипликатор? модификатор к следующему числу = 100 | 1000 + далее число + конец
  */
 public class EngDigitParser {
+
+    private enum State {
+        SingleNumber, DoubleNumber, Dozen, Hundred, Thousand
+    }
+
+    private State determineState(String s) {
+        if (numbers.containsKey(s)) return State.SingleNumber;
+        if (doubleNumbers.containsKey(s)) return State.DoubleNumber;
+        if (dozens.containsKey(s)) return State.Dozen;
+        if (s.equalsIgnoreCase("hundred")) return State.Hundred;
+        if (s.equalsIgnoreCase("thousand")) return State.Thousand;
+        throw new InvalidEngNumberException(s);
+    }
+
 
     public int parse(String line) {
         Integer multiplier = null;
         int sum = 0;
+        List<State> allowedNextStates = Arrays.asList(State.values());
 
         List<String> parts = Arrays.asList(line.split(" "));
         Collections.reverse(parts);
         for (String part : parts) {
-            Integer num = dictionarySingle.get(part);
-            if (num != null) {
-                if (multiplier == null) {
-                    sum += num;
-                } else {
-                    sum += num * multiplier;
-                    multiplier = null;
-                }
-            } else {
-                if (part.endsWith("ty")) {
-                    num = dictionaryFurther.get(part);
-                    sum += num;
-                } else {
-                    multiplier = dictionaryMultipliers.get(part);
+
+            State currentState = determineState(part);
+            if (!allowedNextStates.contains(currentState)) throw new InvalidEngNumberException(part);
+            switch (currentState) {
+                case SingleNumber:
                     if (multiplier == null) {
-                        throw new InvalidEngNumberException(line);
+                        sum += numbers.get(part);
+                        allowedNextStates = Arrays.asList(State.Dozen, State.Hundred, State.Thousand);
+
+                    } else {
+                        sum += numbers.get(part) * multiplier;
+                        if (multiplier == 100) {
+                            multiplier = null;
+                            allowedNextStates = Collections.singletonList(State.Thousand);
+                        } else {
+                            multiplier = null;
+                            allowedNextStates = Collections.emptyList();
+                        }
+
                     }
-                }
+                    break;
+                case DoubleNumber:
+                    sum += doubleNumbers.get(part);
+                    allowedNextStates = Arrays.asList(State.Dozen, State.Hundred, State.Thousand);
+                    break;
+                case Dozen:
+                    sum += dozens.get(part);
+                    allowedNextStates = Arrays.asList(State.Hundred, State.Thousand);
+                    break;
+                case Hundred:
+                    multiplier = 100;
+                    allowedNextStates = Collections.singletonList(State.SingleNumber);
+                    break;
+                case Thousand:
+                    multiplier = 1000;
+                    allowedNextStates = Collections.singletonList(State.SingleNumber);
+                    break;
+
+                default: throw new InvalidEngNumberException();
             }
+
+
         }
 
+        // значит ожидалось число и его не дали
+        if (multiplier != null) throw new InvalidEngNumberException();
+
         return sum;
+
     }
 
 
 
-    private static Map<String, Integer> dictionarySingle = new HashMap<>();
+    private static Map<String, Integer> numbers = new HashMap<>();
     static {
-        dictionarySingle.put("one", 1);
-        dictionarySingle.put("two", 2);
-        dictionarySingle.put("three", 3);
-        dictionarySingle.put("four", 4);
-        dictionarySingle.put("five", 5);
-        dictionarySingle.put("six", 6);
-        dictionarySingle.put("seven", 7);
-        dictionarySingle.put("eight", 8);
-        dictionarySingle.put("nine", 9);
-    }
-    private static Map<String, Integer> dictionaryDouble = new HashMap<>();
-    static {
-        dictionaryDouble.put("ten", 10);
-        dictionaryDouble.put("eleven", 11);
-        dictionaryDouble.put("twelve", 12);
-        dictionaryDouble.put("thirteen", 13);
-        dictionaryDouble.put("fourteen", 14);
-        dictionaryDouble.put("fiveteen", 15);
-        dictionaryDouble.put("sixteen", 16);
-        dictionaryDouble.put("seventeen", 17);
-        dictionaryDouble.put("eighteen", 18);
-        dictionaryDouble.put("nineteen", 19);
+        numbers.put("one", 1);
+        numbers.put("two", 2);
+        numbers.put("three", 3);
+        numbers.put("four", 4);
+        numbers.put("five", 5);
+        numbers.put("six", 6);
+        numbers.put("seven", 7);
+        numbers.put("eight", 8);
+        numbers.put("nine", 9);
     }
 
-    private static Map<String, Integer> dictionaryFurther = new HashMap<>();
+    private static Map<String, Integer> doubleNumbers = new HashMap<>();
     static {
-        dictionaryFurther.put("twenty", 20);
-        dictionaryFurther.put("thirty", 30);
-        dictionaryFurther.put("forty", 40);
-        dictionaryFurther.put("fifty", 50);
-        dictionaryFurther.put("sixty", 60);
-        dictionaryFurther.put("seventy", 70);
-        dictionaryFurther.put("eighty", 80);
-        dictionaryFurther.put("ninety", 90);
+        doubleNumbers.put("ten", 10);
+        doubleNumbers.put("eleven", 11);
+        doubleNumbers.put("twelve", 12);
+        doubleNumbers.put("thirteen", 13);
+        doubleNumbers.put("fourteen", 14);
+        doubleNumbers.put("fifteen", 15);
+        doubleNumbers.put("sixteen", 16);
+        doubleNumbers.put("seventeen", 17);
+        doubleNumbers.put("eighteen", 18);
+        doubleNumbers.put("nineteen", 19);
     }
 
-    private static Map<String, Integer> dictionaryMultipliers = new HashMap<>();
+    private static Map<String, Integer> dozens = new HashMap<>();
     static {
-        dictionaryMultipliers.put("hundred", 100);
-        dictionaryMultipliers.put("thousand", 1000);
-
+        dozens.put("twenty", 20);
+        dozens.put("thirty", 30);
+        dozens.put("forty", 40);
+        dozens.put("fifty", 50);
+        dozens.put("sixty", 60);
+        dozens.put("seventy", 70);
+        dozens.put("eighty", 80);
+        dozens.put("ninety", 90);
     }
 
 }
