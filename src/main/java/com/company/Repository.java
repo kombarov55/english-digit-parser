@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class Repository {
 
-    private List<Integer> data = new ArrayList<>();
+    private volatile List<Integer> data = new ArrayList<>();
 
     private PrintStream out;
 
